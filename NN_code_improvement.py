@@ -11,7 +11,7 @@ from sklearn.feature_selection import VarianceThreshold
 from sklearn.neural_network import MLPClassifier
 from sklearn.metrics import classification_report,confusion_matrix
 from sklearn.model_selection import cross_val_score
-from sklearn.neural_network import GridSearchCV
+from sklearn.model_selection import GridSearchCV
 
 
 df = pd.read_csv('sample.csv', header = None)
@@ -46,7 +46,6 @@ x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.2, random_
 # Oversampling under represented classes with SMOTE
 sm = SMOTE('not majority')
 sm_x_train, sm_y_train = sm.fit_sample(x_train, y_train)
-# Check how many data points each class have print(np.count_nonzero(sm_y_train == 4))
 sm_x_test, sm_y_test = sm.fit_sample(x_test, y_test)
 
 
@@ -54,30 +53,14 @@ sm_x_test, sm_y_test = sm.fit_sample(x_test, y_test)
 print('Scaling data...')
 scaler = MinMaxScaler().fit(sm_x_train)
 sm_x_train = scaler.transform(sm_x_train)
+sm_x_test = scaler.transform(sm_x_test)
 
 # Build NN model for predictions
-mlp = MLPClassifier(max_iter=100)
+mlp = MLPClassifier(hidden_layer_sizes= (50,50,50), max_iter=100)
 
-parameter_space = {
-    'hidden_layer_sizes':[(48, 48, 48), (48, 100, 48), (48, 48, 48, 48)], 
-    'solver':['sgd', 'adam']
-    'alpha':[0.0001, 0.0005, 0.001, 0.01]  
-    'learning_rate_init':[0.05, 0.1, 0.25, 0.5]  
-} 
+mlp.fit(sm_x_train, sm_y_train)
+y_pred = mlp.predict(sm_x_test)
 
-clf = GridSearchCV(mlp, parameter_space, n_jobs=-1, cv=5)
-clf.fit(sm_x_train, sm_y_train)
-
-print('Best parameters found:\n, clf.best_params_')
-
-# mlp.fit(sm_x_train, sm_y_train)
-# y_pred = mlp.predict(sm_x_test)
-
-
-
-# Prediction run 2 with X-validation
-scores = cross_val_score(mlp, sm_x_train, sm_y_train, cv=5)
-print('Cross-validated scores: ' + scores)
 
 # Evaluate the model
 y_pred = y_pred.astype(np.int8)
@@ -86,11 +69,22 @@ sm_y_test = sm_y_test.astype(np.int8)
 sm_y_test = le.inverse_transform(sm_y_test)
 y_pred = le.inverse_transform(y_pred)
 
-print(confusion_matrix(sm_y_test, y_pred))
+cm = confusion_matrix(sm_y_test, y_pred)
+print(cm)
+sns.heatmap(cm, center=True)
+plt.show()
 print(classification_report(sm_y_test,y_pred))
 
 
 
+
+
+
+
+
+# Prediction run 2 with X-validation
+scores = cross_val_score(mlp, sm_x_train, sm_y_train, cv=5)
+print('Cross-validated scores: ' + scores)
 
 
 
