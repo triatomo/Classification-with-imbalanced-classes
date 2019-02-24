@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -19,17 +21,20 @@ x = df.drop([295], axis=1)
 y = df[295]
 
 # Check for missing values
+print('Check for missing values...')
 for c in df.columns:
     missing_value = df[c].isnull().sum()/len(df)*100
     if missing_value > 0:
         print(str(c) + "   " + str(missing_value))
 else:
-    print("There is no missing value. All good!")
+    print("There are no missing values. All good!")
 
 
 # Low variance filter
+print('Removing features with low variance...')
 selector = VarianceThreshold(0.05)
 x = selector.fit_transform(x)
+print('The new datashape is:')
 print(x.shape)
 
 x = pd.DataFrame(data=x)
@@ -47,18 +52,20 @@ df = pd.concat([x,y], axis=1)
 y = df.values[:,48]
 y = df.values[:,48]  
 
-# Creating training and validation set
+# Creating training and test set
+print('Splitting the data into training and test data...')
 x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.2, random_state=0)
 
 
 # Oversampling under represented classes with SMOTE
+print('Oversampling under-represented data...')
 sm = SMOTE('not majority')
 sm_x_train, sm_y_train = sm.fit_sample(x_train, y_train)
 sm_x_test, sm_y_test = sm.fit_sample(x_test, y_test)
 
 
 # Scale data to feed Neural Network
-print('Scaling data...')s
+print('Scaling data...')
 scaler = StandardScaler().fit(sm_x_train)
 
 sm_x_train = scaler.transform(sm_x_train)
@@ -68,29 +75,30 @@ sm_x_test = scaler.transform(sm_x_test)
 # Build NN model for predictions
 mlp = MLPClassifier(hidden_layer_sizes= (50,50,50), max_iter=100)
 
+print('Training Neural Network (this could take some time)...')
 mlp.fit(sm_x_train, sm_y_train)
 y_pred = mlp.predict(sm_x_test)
 
-
+# Evaluating NN model and visualization
 y_pred = y_pred.astype(np.int64)
 y_pred = le.inverse_transform(y_pred)
 
 sm_y_test = sm_y_test.astype(np.int64)
 sm_y_test = le.inverse_transform(sm_y_test)
 
-
+cm = confusion_matrix(sm_y_test, y_pred)
 cm_norm = cm/cm.astype(np.float).sum(axis=1)
 print('Confusion matrix:')
-print(cm_norm)
+print(cm)
 sns.heatmap(cm_norm, center=0.5,
             annot=True, fmt='.2f',
             vmin=0, vmax=1, cmap='Reds',
             xticklabels=['A','B','C','D','E'], 
             yticklabels=['A','B','C','D','E'])
+plt.savefig('cm_norm_heatmap.png')
+print('Saving normalized confusion matrix heatmap to "cm_norm_heatmap.png"')
 
-sns.heatmap(cm, center=True)
 print('Classification matrix:')
-plt.show()
 print(classification_report(sm_y_test,y_pred))
 
 
