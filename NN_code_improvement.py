@@ -104,12 +104,11 @@ print(classification_report(sm_y_test,y_pred))
 
 
 
-kfold = KFold(n_splits=5, shuffle=True, random_state=0)
-scores = cross_validate(mlp, sm_x_train, sm_y_train, cv=5)
-scores = cross_val_score(mlp, sm_x_train, sm_y_train, cv=5)
+# Show the power of the model with cross validation
+print('Cross-validating scores (it will take some time)...')
+scores = cross_validate(mlp, sm_x_train, sm_y_train, cv=3)
 print('Cross-validated scores: ' + scores)
 parameter_space = {'learning_rate_init':[0.0001, 0.01]} 
-klearn.cross_validation.StratifiedKFold.
 clf = GridSearchCV(mlp, param_grid=parameter_space, scoring='accuracy', cv=2)
 clf.fit(sm_x_train, sm_y_train)
 
