@@ -9,14 +9,15 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.feature_selection import VarianceThreshold
 from sklearn.neural_network import MLPClassifier
 from sklearn.metrics import classification_report,confusion_matrix
-from sklearn.model_selection import cross_val_score
-from sklearn.model_selection import GridSearchCV
+from sklearn.model_selection import KFold, cross_validate,GridSearchCV
 
 
 df = pd.read_csv('sample.csv', header = None)
 
-# Separate target variable
+# Separate target variable 
 x = df.drop([295], axis=1)
+y = df[295]
+
 # Check for missing values
 for c in df.columns:
     missing_value = df[c].isnull().sum()/len(df)*100
@@ -24,7 +25,7 @@ for c in df.columns:
         print(str(c) + "   " + str(missing_value))
 else:
     print("There is no missing value. All good!")
-y = df[295]
+
 
 # Low variance filter
 selector = VarianceThreshold(0.05)
@@ -34,15 +35,16 @@ print(x.shape)
 x = pd.DataFrame(data=x)
 
 # Encode target variable to numerical (A-E becomes 0-4)
-le = preprocessing.LabelEncoder().fit(y)
-y = le.transform(y)
+le = preprocessing.LabelEncoder()
+y = le.fit_transform(y)
+
 
 y = pd.DataFrame(data=y)
 
 # Create a new training set
 df = pd.concat([x,y], axis=1)
 
-x = df.values[:,0:48] 
+y = df.values[:,48]
 y = df.values[:,48]  
 
 # Creating training and validation set
@@ -56,10 +58,12 @@ sm_x_test, sm_y_test = sm.fit_sample(x_test, y_test)
 
 
 # Scale data to feed Neural Network
-print('Scaling data...')
-scaler = MinMaxScaler().fit(sm_x_train)
+print('Scaling data...')s
+scaler = StandardScaler().fit(sm_x_train)
+
 sm_x_train = scaler.transform(sm_x_train)
 sm_x_test = scaler.transform(sm_x_test)
+
 
 # Build NN model for predictions
 mlp = MLPClassifier(hidden_layer_sizes= (50,50,50), max_iter=100)
