@@ -96,25 +96,18 @@ print(classification_report(sm_y_test,y_pred))
 
 
 
-
-
-
-
-# Prediction run 2 with X-validation
+kfold = KFold(n_splits=5, shuffle=True, random_state=0)
+scores = cross_validate(mlp, sm_x_train, sm_y_train, cv=5)
 scores = cross_val_score(mlp, sm_x_train, sm_y_train, cv=5)
 print('Cross-validated scores: ' + scores)
-
-
-
-
+parameter_space = {'learning_rate_init':[0.0001, 0.01]} 
 klearn.cross_validation.StratifiedKFold.
+clf = GridSearchCV(mlp, param_grid=parameter_space, scoring='accuracy', cv=2)
+clf.fit(sm_x_train, sm_y_train)
 
-
+print('Best parameters found: ', clf.best_params_)
+print('Best estimator found: ', clf.best_estimator_)
+print('Best score found: ',clf.best_score_)
 
 print(mlp.coefs_[4])
-
-# Use a single scaler, fit on the train set. 
-# It's best to pretend that you are in production, 
-# and don't actually have the test dataset. If you 
-# fit a separate scaler, you are using information you 
 # shouldn't have. 
