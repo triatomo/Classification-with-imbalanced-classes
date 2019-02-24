@@ -72,16 +72,24 @@ mlp.fit(sm_x_train, sm_y_train)
 y_pred = mlp.predict(sm_x_test)
 
 
-# Evaluate the model
-y_pred = y_pred.astype(np.int8)
-sm_y_test = sm_y_test.astype(np.int8)
-
-sm_y_test = le.inverse_transform(sm_y_test)
+y_pred = y_pred.astype(np.int64)
 y_pred = le.inverse_transform(y_pred)
 
-cm = confusion_matrix(sm_y_test, y_pred)
-print(cm)
+sm_y_test = sm_y_test.astype(np.int64)
+sm_y_test = le.inverse_transform(sm_y_test)
+
+
+cm_norm = cm/cm.astype(np.float).sum(axis=1)
+print('Confusion matrix:')
+print(cm_norm)
+sns.heatmap(cm_norm, center=0.5,
+            annot=True, fmt='.2f',
+            vmin=0, vmax=1, cmap='Reds',
+            xticklabels=['A','B','C','D','E'], 
+            yticklabels=['A','B','C','D','E'])
+
 sns.heatmap(cm, center=True)
+print('Classification matrix:')
 plt.show()
 print(classification_report(sm_y_test,y_pred))
 
