@@ -5,8 +5,7 @@ import seaborn as sns
 from sklearn import preprocessing
 from sklearn.model_selection import train_test_split
 from imblearn.over_sampling import SMOTE
-from sklearn.ensemble import RandomForestRegressor
-from sklearn.preprocessing import MinMaxScaler
+from sklearn.preprocessing import StandardScaler
 from sklearn.feature_selection import VarianceThreshold
 from sklearn.neural_network import MLPClassifier
 from sklearn.metrics import classification_report,confusion_matrix
@@ -18,6 +17,13 @@ df = pd.read_csv('sample.csv', header = None)
 
 # Separate target variable
 x = df.drop([295], axis=1)
+# Check for missing values
+for c in df.columns:
+    missing_value = df[c].isnull().sum()/len(df)*100
+    if missing_value > 0:
+        print(str(c) + "   " + str(missing_value))
+else:
+    print("There is no missing value. All good!")
 y = df[295]
 
 # Low variance filter
