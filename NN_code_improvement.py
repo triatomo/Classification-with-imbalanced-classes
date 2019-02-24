@@ -11,12 +11,14 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.feature_selection import VarianceThreshold
 from sklearn.neural_network import MLPClassifier
 from sklearn.metrics import classification_report,confusion_matrix
-from sklearn.model_selection import KFold, cross_validate,GridSearchCV
+from sklearn.model_selection import KFold, cross_val_score,GridSearchCV
 
 
+print('Import the data...')
 df = pd.read_csv('sample.csv', header = None)
 
 # Separate target variable 
+print('Separating target variable...')
 x = df.drop([295], axis=1)
 y = df[295]
 
@@ -49,7 +51,7 @@ y = pd.DataFrame(data=y)
 # Create a new training set
 df = pd.concat([x,y], axis=1)
 
-y = df.values[:,48]
+x = df.values[:,0:48] 
 y = df.values[:,48]  
 
 # Creating training and test set
@@ -106,8 +108,18 @@ print(classification_report(sm_y_test,y_pred))
 
 # Show the power of the model with cross validation
 print('Cross-validating scores (it will take some time)...')
-scores = cross_validate(mlp, sm_x_train, sm_y_train, cv=3)
-print('Cross-validated scores: ' + scores)
+scores = cross_val_score(mlp, sm_x_train, sm_y_train, cv=3)
+print('Cross-validated scores: ', scores)
+print('Accuracy: %0.2f (+/- %0.2f)' % (scores.mean(),scores.std()*2))
+
+
+# Improving NN model by adjusting the hyperparameters with cross validation
+#
+# An initial exhaustive grid search with parameter_space = {'hidden_layer_sizes':[(50,50,50),(50,100,50),(100,)],
+# 'alpha':[0.05, 0.1, 0.25],'learning_rate_init':[0.0001, 0.0005, 0.001, 0.01]} could not be completed due to the 
+# not enough computer power. Therefore, I opted only for the learning rate as parameter.
+
+print('Attempting to find better parameters with GridSearchCV (this will take some time)...')
 parameter_space = {'learning_rate_init':[0.0001, 0.01]} 
 clf = GridSearchCV(mlp, param_grid=parameter_space, scoring='accuracy', cv=2)
 clf.fit(sm_x_train, sm_y_train)
@@ -116,5 +128,15 @@ print('Best parameters found: ', clf.best_params_)
 print('Best estimator found: ', clf.best_estimator_)
 print('Best score found: ',clf.best_score_)
 
-print(mlp.coefs_[4])
-# shouldn't have. 
+y_pred_clf = clf.predict(sm_x_test)
+
+y_pred_clf = y_pred_clf.astype(np.int64)
+y_pred_clf = le.inverse_transform(y_pred_clf)
+
+print('Classification matrix:')
+print(classification_report(sm_y_test,y_pred_clf))
+
+# Conclusion: the GridSearchCV result is worse than previous prediction
+print("the GridSearchCV's best parameter does not result in better score than my previous prediction using mlp classifier.")
+print('The best score overall: ', mlp.best_score_)
+
