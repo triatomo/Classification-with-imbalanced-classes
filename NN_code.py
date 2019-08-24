@@ -63,7 +63,7 @@ x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.2, random_
 print('Oversampling under-represented data...')
 sm = SMOTE('not majority')
 sm_x_train, sm_y_train = sm.fit_sample(x_train, y_train)
-sm_x_test, sm_y_test = sm.fit_sample(x_test, y_test)
+
 
 
 # Scale data to feed Neural Network
@@ -71,7 +71,7 @@ print('Scaling data...')
 scaler = StandardScaler().fit(sm_x_train)
 
 sm_x_train = scaler.transform(sm_x_train)
-sm_x_test = scaler.transform(sm_x_test)
+x_test = scaler.transform(x_test)
 
 
 # Build NN model for predictions
@@ -79,16 +79,16 @@ mlp = MLPClassifier(hidden_layer_sizes= (50,50,50), max_iter=100)
 
 print('Training Neural Network (this could take some time)...')
 mlp.fit(sm_x_train, sm_y_train)
-y_pred = mlp.predict(sm_x_test)
+y_pred = mlp.predict(x_test)
 
 # Evaluating NN model and visualization
 y_pred = y_pred.astype(np.int64)
 y_pred = le.inverse_transform(y_pred)
 
-sm_y_test = sm_y_test.astype(np.int64)
-sm_y_test = le.inverse_transform(sm_y_test)
+y_test = y_test.astype(np.int64)
+y_test = le.inverse_transform(y_test)
 
-cm = confusion_matrix(sm_y_test, y_pred)
+cm = confusion_matrix(y_test, y_pred)
 cm_norm = cm/cm.astype(np.float).sum(axis=1)
 print('Confusion matrix:')
 print(cm)
@@ -101,7 +101,7 @@ plt.savefig('cm_norm_heatmap.png')
 print('Saving normalized confusion matrix heatmap to "cm_norm_heatmap.png"')
 
 print('Classification matrix:')
-print(classification_report(sm_y_test,y_pred))
+print(classification_report(y_test,y_pred))
 
 
 
@@ -128,13 +128,13 @@ print('Best parameters found: ', clf.best_params_)
 print('Best estimator found: ', clf.best_estimator_)
 print('Best score found: ',clf.best_score_)
 
-y_pred_clf = clf.predict(sm_x_test)
+y_pred_clf = clf.predict(x_test)
 
 y_pred_clf = y_pred_clf.astype(np.int64)
 y_pred_clf = le.inverse_transform(y_pred_clf)
 
 print('Classification matrix:')
-print(classification_report(sm_y_test,y_pred_clf))
+print(classification_report(y_test,y_pred_clf))
 
 # Conclusion: the GridSearchCV result is worse than previous prediction
 print("the GridSearchCV's best parameter does not result in better score than my previous prediction using mlp classifier.")
